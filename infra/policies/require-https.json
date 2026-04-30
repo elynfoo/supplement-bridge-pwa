@@ -1,0 +1,24 @@
+{
+  "properties": {
+    "displayName": "Require HTTPS on App Service",
+    "description": "Ensures all App Service web apps redirect HTTP traffic to HTTPS.",
+    "mode": "All",
+    "policyRule": {
+      "if": {
+        "allOf": [
+          {
+            "field": "type",
+            "equals": "Microsoft.Web/sites"
+          },
+          {
+            "field": "Microsoft.Web/sites/httpsOnly",
+            "notEquals": true
+          }
+        ]
+      },
+      "then": {
+        "effect": "deny"
+      }
+    }
+  }
+}

@@ -1,0 +1,124 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [main, 'release/**']
+  pull_request:
+    branches: [main]
+  schedule:
+    # Run full scan weekly on Monday 02:00 UTC
+    - cron: '0 2 * * 1'
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+jobs:
+  # ── CodeQL static analysis ───────────────────────────────────────────────────
+  codeql:
+    name: CodeQL Analysis
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        language: [javascript]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          queries: security-extended,security-and-quality
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: '/language:${{ matrix.language }}'
+
+  # ── npm dependency audit ─────────────────────────────────────────────────────
+  npm-audit:
+    name: npm Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Audit backend dependencies
+        working-directory: backend
+        run: |
+          npm ci
+          npm audit --audit-level=high --json > npm-audit-backend.json || true
+          node -e "
+            const r = require('./npm-audit-backend.json');
+            const vulns = r.metadata?.vulnerabilities || {};
+            const high = (vulns.high || 0) + (vulns.critical || 0);
+            if (high > 0) { console.error('HIGH/CRITICAL vulnerabilities found:', high); process.exit(1); }
+            console.log('No high/critical vulnerabilities in backend.');
+          "
+
+      - name: Audit frontend dependencies
+        working-directory: frontend
+        run: |
+          npm ci
+          npm audit --audit-level=high --json > npm-audit-frontend.json || true
+          node -e "
+            const r = require('./npm-audit-frontend.json');
+            const vulns = r.metadata?.vulnerabilities || {};
+            const high = (vulns.high || 0) + (vulns.critical || 0);
+            if (high > 0) { console.error('HIGH/CRITICAL vulnerabilities found:', high); process.exit(1); }
+            console.log('No high/critical vulnerabilities in frontend.');
+          "
+
+      - name: Upload audit reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-audit-reports
+          path: |
+            backend/npm-audit-backend.json
+            frontend/npm-audit-frontend.json
+          retention-days: 30
+
+  # ── Secret scanning (detect accidentally committed secrets) ──────────────────
+  secret-scan:
+    name: Secret Scan (Gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # full history for baseline
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ── Bicep / IaC security linting ─────────────────────────────────────────────
+  iac-scan:
+    name: IaC Security Scan (Checkov)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Checkov IaC scan
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: infra/
+          framework: bicep
+          output_format: sarif
+          output_file_path: checkov-results.sarif
+          soft_fail: true
+
+      - name: Upload Checkov SARIF to GitHub Security
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: checkov-results.sarif
+          category: checkov-iac

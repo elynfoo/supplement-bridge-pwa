@@ -1,0 +1,28 @@
+{
+  "properties": {
+    "displayName": "Allowed Azure resource locations",
+    "description": "Restricts deployments to approved Azure regions to control data residency.",
+    "mode": "All",
+    "parameters": {
+      "allowedLocations": {
+        "type": "Array",
+        "metadata": {
+          "displayName": "Allowed locations",
+          "description": "List of Azure regions where resources can be deployed."
+        },
+        "defaultValue": ["australiaeast", "australiasoutheast"]
+      }
+    },
+    "policyRule": {
+      "if": {
+        "not": {
+          "field": "location",
+          "in": "[parameters('allowedLocations')]"
+        }
+      },
+      "then": {
+        "effect": "deny"
+      }
+    }
+  }
+}

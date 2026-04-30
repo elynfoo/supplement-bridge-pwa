@@ -1,0 +1,22 @@
+# CODEOWNERS — reviewers are auto-requested when matched paths change.
+# Format: <path-pattern>  <@github-username or @org/team>
+
+# Default owner for everything not matched below
+*                           @your-org/devops-team
+
+# Infrastructure changes require infra team approval
+/infra/                     @your-org/infra-team
+/infra/policies/            @your-org/security-team @your-org/infra-team
+
+# CI/CD workflow changes require devops + security review
+/.github/workflows/         @your-org/devops-team @your-org/security-team
+
+# Backend API — owned by backend team
+/backend/                   @your-org/backend-team
+
+# Frontend / PWA — owned by frontend team
+/frontend/                  @your-org/frontend-team
+
+# Security-sensitive files
+/.github/workflows/security-scan.yml   @your-org/security-team
+/infra/policies/                        @your-org/security-team

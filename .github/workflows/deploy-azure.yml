@@ -2,70 +2,212 @@ name: Deploy to Azure
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
+    paths-ignore: ['infra/**', '**.md']
   workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        type: choice
+        options: [dev, staging, prod]
+
+permissions:
+  id-token: write
+  contents: read
+
+# ── Environment variable map ──────────────────────────────────────────────────
+env:
+  NODE_VERSION: '20.x'
 
 jobs:
-  deploy-frontend:
+  # ── Build & test (shared artifact) ───────────────────────────────────────────
+  build:
+    name: Build & Test
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-
     steps:
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-    - name: Use Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '20.x'
-        cache: 'npm'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: |
+            frontend/package-lock.json
+            backend/package-lock.json
 
-    - name: Install and build frontend
-      run: |
-        cd frontend
-        npm ci
-        npm run build
+      - name: Install & build frontend
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build
 
-    # Uncomment and configure after setting up Azure Static Web Apps
-    # - name: Deploy to Azure Static Web Apps
-    #   id: builddeploy
-    #   uses: Azure/static-web-apps-deploy@v1
-    #   with:
-    #     azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
-    #     repo_token: ${{ secrets.GITHUB_TOKEN }}
-    #     action: "upload"
-    #     app_location: "/frontend/build"
-    #     output_location: "."
-    #     skip_app_build: true
+      - name: Install & test backend
+        working-directory: backend
+        run: |
+          npm ci
+          npm test --if-present
 
-  deploy-backend:
+      - name: Upload frontend build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: frontend/build/
+          retention-days: 3
+
+      - name: Upload backend artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-app
+          path: |
+            backend/
+            !backend/node_modules/
+          retention-days: 3
+
+  # ── Deploy to Dev ─────────────────────────────────────────────────────────────
+  deploy-dev:
+    name: Deploy → Dev
+    needs: build
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-
+    environment:
+      name: dev
+      url: https://healthsupp-dev-app.azurewebsites.net
     steps:
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-    - name: Use Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '20.x'
-        cache: 'npm'
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
 
-    - name: Install backend dependencies
-      run: |
-        cd backend
-        npm ci
+      - name: Azure Login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-    # Uncomment and configure after setting up Azure App Service
-    # - name: Deploy to Azure App Service
-    #   uses: azure/webapps-deploy@v2
-    #   with:
-    #     app-name: ${{ secrets.AZURE_APPSERVICE_NAME }}
-    #     publish-profile: ${{ secrets.AZURE_APPSERVICE_PUBLISH_PROFILE }}
-    #     package: ./backend
+      - name: Deploy backend to App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: healthsupp-dev-app
+          package: backend-app/
 
-    - name: Verify backend
-      run: |
-        cd backend
-        npm run start &
-        sleep 5
-        curl -f http://localhost:3000/health || true
+      - name: Deploy frontend to Static Web Apps
+        uses: azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_DEV }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          action: upload
+          app_location: frontend-build/
+          skip_app_build: true
+
+      - name: Smoke test
+        run: |
+          sleep 15
+          curl -f https://healthsupp-dev-app.azurewebsites.net/api/health || exit 1
+          echo "Dev smoke test passed"
+
+  # ── Deploy to Staging (requires dev success + reviewer approval) ──────────────
+  deploy-staging:
+    name: Deploy → Staging
+    needs: deploy-dev
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      url: https://healthsupp-staging-app.azurewebsites.net
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+
+      - name: Azure Login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID_STAGING }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy backend to App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: healthsupp-staging-app
+          package: backend-app/
+
+      - name: Deploy frontend to Static Web Apps
+        uses: azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_STAGING }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          action: upload
+          app_location: frontend-build/
+          skip_app_build: true
+
+      - name: Smoke test
+        run: |
+          sleep 15
+          curl -f https://healthsupp-staging-app.azurewebsites.net/api/health || exit 1
+          echo "Staging smoke test passed"
+
+      - name: Link to Azure Boards work item
+        if: success()
+        env:
+          SYSTEM_ACCESSTOKEN: ${{ secrets.AZURE_DEVOPS_TOKEN }}
+        run: |
+          echo "Staging deployment successful. Tag AB#$(git log -1 --format='%s' | grep -oP 'AB#\K[0-9]+' || echo 'N/A') as deployed."
+
+  # ── Deploy to Production (requires staging + mandatory reviewer approval) ──────
+  deploy-prod:
+    name: Deploy → Production
+    needs: deploy-staging
+    runs-on: ubuntu-latest
+    environment:
+      name: prod
+      url: https://healthsupp-prod-app.azurewebsites.net
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+
+      - name: Azure Login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID_PROD }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy backend to App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: healthsupp-prod-app
+          package: backend-app/
+
+      - name: Deploy frontend to Static Web Apps
+        uses: azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_PROD }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          action: upload
+          app_location: frontend-build/
+          skip_app_build: true
+
+      - name: Smoke test
+        run: |
+          sleep 20
+          curl -f https://healthsupp-prod-app.azurewebsites.net/api/health || exit 1
+          echo "Production smoke test passed"
+
+      - name: Create release notes
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=$(git describe --tags --always)
+          COMMIT_MSG=$(git log -1 --format='%s')
+          gh release create "$VERSION" \
+            --title "Release $VERSION" \
+            --notes "**Deployed to production:** $(date -u '+%Y-%m-%d %H:%M UTC')
+
+          **Commit:** $COMMIT_MSG
+          **SHA:** ${{ github.sha }}" \
+            --target main || echo "Release creation skipped (tag may already exist)"

@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import './Checkout.css';
 
-export default function Checkout({ cartItems, onSubmit, loading, onCancel }) {
+export default function Checkout({ cartItems, user, onSubmit, loading, onCancel }) {
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
+    firstName: user?.firstName || '',
+    lastName: user?.lastName || '',
+    email: user?.email || '',
     phone: '',
     address: '',
     city: '',

@@ -1,0 +1,59 @@
+{
+  "properties": {
+    "displayName": "Enable Microsoft Defender for Cloud plans",
+    "description": "Enables Defender for Servers, App Service, SQL, and Storage at the subscription level.",
+    "mode": "All",
+    "policyRule": {
+      "if": {
+        "field": "type",
+        "equals": "Microsoft.Resources/subscriptions"
+      },
+      "then": {
+        "effect": "deployIfNotExists",
+        "details": {
+          "type": "Microsoft.Security/pricings",
+          "deploymentScope": "subscription",
+          "existenceScope": "subscription",
+          "existenceCondition": {
+            "allOf": [
+              {
+                "field": "Microsoft.Security/pricings/pricingTier",
+                "equals": "Standard"
+              }
+            ]
+          },
+          "deployment": {
+            "location": "australiaeast",
+            "properties": {
+              "mode": "incremental",
+              "template": {
+                "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+                "contentVersion": "1.0.0.0",
+                "resources": [
+                  {
+                    "type": "Microsoft.Security/pricings",
+                    "apiVersion": "2023-01-01",
+                    "name": "AppServices",
+                    "properties": { "pricingTier": "Standard" }
+                  },
+                  {
+                    "type": "Microsoft.Security/pricings",
+                    "apiVersion": "2023-01-01",
+                    "name": "SqlServers",
+                    "properties": { "pricingTier": "Standard" }
+                  },
+                  {
+                    "type": "Microsoft.Security/pricings",
+                    "apiVersion": "2023-01-01",
+                    "name": "StorageAccounts",
+                    "properties": { "pricingTier": "Standard" }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
