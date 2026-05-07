@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import axios from 'axios';
 import './Browse.css';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const API_URL = process.env.REACT_APP_API_URL || '';
 
 export default function Browse({ products, onSelectProduct, onStartQuiz }) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -41,13 +41,13 @@ export default function Browse({ products, onSelectProduct, onStartQuiz }) {
       <div className="browse-controls">
         <input
           type="text"
-          placeholder="🔍 Search supplements, ingredients..."
+          placeholder="ðŸ” Search supplements, ingredients..."
           value={searchQuery}
           onChange={handleSearch}
           className="search-input"
         />
         <button className="quiz-button" onClick={onStartQuiz}>
-          💡 Take Health Quiz
+          ðŸ’¡ Take Health Quiz
         </button>
       </div>
 
@@ -76,3 +76,4 @@ export default function Browse({ products, onSelectProduct, onStartQuiz }) {
     </div>
   );
 }
+

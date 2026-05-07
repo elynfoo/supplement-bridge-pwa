@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const API_URL = process.env.REACT_APP_API_URL || '';
 
 const EMPTY_FORM = {
   name: '', category: 'supplements', price: '', stock: '',
@@ -91,7 +91,7 @@ export default function AdminProducts({ token, onStatsChange }) {
     }
   };
 
-  if (loading) return <div className="admin-loading">Loading products…</div>;
+  if (loading) return <div className="admin-loading">Loading productsâ€¦</div>;
 
   return (
     <div className="admin-section">
@@ -145,7 +145,7 @@ export default function AdminProducts({ token, onStatsChange }) {
             <div className="admin-form-actions">
               <button type="button" className="admin-btn-secondary" onClick={() => setShowForm(false)}>Cancel</button>
               <button type="submit" className="admin-btn-primary" disabled={saving}>
-                {saving ? 'Saving…' : editingProduct ? 'Save Changes' : 'Add Product'}
+                {saving ? 'Savingâ€¦' : editingProduct ? 'Save Changes' : 'Add Product'}
               </button>
             </div>
           </form>
@@ -189,3 +189,4 @@ export default function AdminProducts({ token, onStatsChange }) {
     </div>
   );
 }
+

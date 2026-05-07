@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const API_URL = process.env.REACT_APP_API_URL || '';
 
 export default function AdminInventory({ token, onStatsChange }) {
   const [products, setProducts] = useState([]);
@@ -78,13 +78,13 @@ export default function AdminInventory({ token, onStatsChange }) {
     return { label: 'In Stock', cls: 'ok' };
   };
 
-  if (loading) return <div className="admin-loading">Loading inventory…</div>;
+  if (loading) return <div className="admin-loading">Loading inventoryâ€¦</div>;
 
   return (
     <div className="admin-section">
       <div className="admin-section-header">
         <h2>Inventory</h2>
-        <span className="admin-live-badge">● Live</span>
+        <span className="admin-live-badge">â— Live</span>
       </div>
 
       <div className="admin-table-wrapper">
@@ -121,8 +121,8 @@ export default function AdminInventory({ token, onStatsChange }) {
                   </td>
                   <td>
                     <div className="stock-adj-btns">
-                      <button onClick={() => handleAdjust(product.id, -10)}>−10</button>
-                      <button onClick={() => handleAdjust(product.id, -1)}>−1</button>
+                      <button onClick={() => handleAdjust(product.id, -10)}>âˆ’10</button>
+                      <button onClick={() => handleAdjust(product.id, -1)}>âˆ’1</button>
                       <button onClick={() => handleAdjust(product.id, +1)}>+1</button>
                       <button onClick={() => handleAdjust(product.id, +10)}>+10</button>
                     </div>
@@ -134,7 +134,7 @@ export default function AdminInventory({ token, onStatsChange }) {
                         disabled={saving[product.id]}
                         onClick={() => handleSaveStock(product.id)}
                       >
-                        {saving[product.id] ? '…' : 'Save'}
+                        {saving[product.id] ? 'â€¦' : 'Save'}
                       </button>
                     )}
                   </td>
@@ -147,3 +147,4 @@ export default function AdminInventory({ token, onStatsChange }) {
     </div>
   );
 }
+

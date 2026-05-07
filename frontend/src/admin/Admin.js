@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import AdminOrders from './AdminOrders';
 import AdminProducts from './AdminProducts';
 import AdminInventory from './AdminInventory';
 import './Admin.css';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const API_URL = process.env.REACT_APP_API_URL || '';
 
 export default function Admin() {
   const [adminUser, setAdminUser] = useState(() => {
@@ -125,7 +125,7 @@ function AdminLogin({ onLogin }) {
             value={form.password} onChange={e => setForm({ ...form, password: e.target.value })}
           />
           <button type="submit" disabled={loading}>
-            {loading ? 'Signing in…' : 'Sign In'}
+            {loading ? 'Signing inâ€¦' : 'Sign In'}
           </button>
         </form>
         <p className="admin-login-hint">admin@healthsupp.com / Admin123!</p>
@@ -133,3 +133,4 @@ function AdminLogin({ onLogin }) {
     </div>
   );
 }
+

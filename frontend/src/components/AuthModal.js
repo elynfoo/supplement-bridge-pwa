@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import axios from 'axios';
 import './AuthModal.css';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const API_URL = process.env.REACT_APP_API_URL || '';
 
 export default function AuthModal({ onSuccess, onClose, message }) {
   const [tab, setTab] = useState('login');
@@ -50,7 +50,7 @@ export default function AuthModal({ onSuccess, onClose, message }) {
   return (
     <div className="auth-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="auth-modal">
-        <button className="auth-close" onClick={onClose}>✕</button>
+        <button className="auth-close" onClick={onClose}>âœ•</button>
 
         {message && <p className="auth-message">{message}</p>}
 
@@ -84,7 +84,7 @@ export default function AuthModal({ onSuccess, onClose, message }) {
               onChange={e => setLoginForm({ ...loginForm, password: e.target.value })}
             />
             <button type="submit" className="auth-submit" disabled={loading}>
-              {loading ? 'Signing in…' : 'Sign In'}
+              {loading ? 'Signing inâ€¦' : 'Sign In'}
             </button>
             <p className="auth-demo">
               Demo: <strong>demo@customer.com</strong> / <strong>Demo123!</strong>
@@ -120,7 +120,7 @@ export default function AuthModal({ onSuccess, onClose, message }) {
               onChange={e => setRegisterForm({ ...registerForm, confirmPassword: e.target.value })}
             />
             <button type="submit" className="auth-submit" disabled={loading}>
-              {loading ? 'Creating account…' : 'Create Account'}
+              {loading ? 'Creating accountâ€¦' : 'Create Account'}
             </button>
           </form>
         )}
@@ -128,3 +128,4 @@ export default function AuthModal({ onSuccess, onClose, message }) {
     </div>
   );
 }
+

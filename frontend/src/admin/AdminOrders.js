@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const API_URL = process.env.REACT_APP_API_URL || '';
 
 const STATUS_COLORS = {
   pending: '#ff9800', confirmed: '#2196f3',
@@ -65,13 +65,13 @@ export default function AdminOrders({ token, onStatsChange }) {
     }
   };
 
-  if (loading) return <div className="admin-loading">Loading orders…</div>;
+  if (loading) return <div className="admin-loading">Loading ordersâ€¦</div>;
 
   return (
     <div className="admin-section">
       <div className="admin-section-header">
         <h2>Orders</h2>
-        <span className="admin-live-badge">● Live</span>
+        <span className="admin-live-badge">â— Live</span>
       </div>
 
       {notification && (
@@ -136,7 +136,7 @@ export default function AdminOrders({ token, onStatsChange }) {
                             <strong>Items:</strong>
                             <ul>
                               {order.items.map(item => (
-                                <li key={item.id}>{item.name} × {item.quantity} — ${(item.price * item.quantity).toFixed(2)}</li>
+                                <li key={item.id}>{item.name} Ã— {item.quantity} â€” ${(item.price * item.quantity).toFixed(2)}</li>
                               ))}
                             </ul>
                           </div>
@@ -157,3 +157,4 @@ export default function AdminOrders({ token, onStatsChange }) {
     </div>
   );
 }
+
