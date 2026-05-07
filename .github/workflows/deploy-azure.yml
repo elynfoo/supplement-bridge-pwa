@@ -71,7 +71,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: dev
-      url: https://healthsupp-dev-app.azurewebsites.net
+      url: https://supplement-bridge-dev.azurewebsites.net
     steps:
       - uses: actions/checkout@v4
 
@@ -88,7 +88,7 @@ jobs:
       - name: Deploy backend to App Service
         uses: azure/webapps-deploy@v3
         with:
-          app-name: healthsupp-dev-app
+          app-name: supplement-bridge-dev
           package: backend-app/
 
       - name: Deploy frontend to Static Web Apps
@@ -103,7 +103,7 @@ jobs:
       - name: Smoke test
         run: |
           sleep 15
-          curl -f https://healthsupp-dev-app.azurewebsites.net/api/health || exit 1
+          curl -f https://supplement-bridge-dev.azurewebsites.net/api/health || exit 1
           echo "Dev smoke test passed"
 
   # ── Deploy to Staging (requires dev success + reviewer approval) ──────────────
@@ -113,7 +113,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: staging
-      url: https://healthsupp-staging-app.azurewebsites.net
+      url: https://supplement-bridge-staging.azurewebsites.net
     steps:
       - uses: actions/checkout@v4
 
@@ -130,7 +130,7 @@ jobs:
       - name: Deploy backend to App Service
         uses: azure/webapps-deploy@v3
         with:
-          app-name: healthsupp-staging-app
+          app-name: supplement-bridge-staging
           package: backend-app/
 
       - name: Deploy frontend to Static Web Apps
@@ -145,7 +145,7 @@ jobs:
       - name: Smoke test
         run: |
           sleep 15
-          curl -f https://healthsupp-staging-app.azurewebsites.net/api/health || exit 1
+          curl -f https://supplement-bridge-staging.azurewebsites.net/api/health || exit 1
           echo "Staging smoke test passed"
 
       - name: Link to Azure Boards work item
@@ -162,7 +162,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: prod
-      url: https://healthsupp-prod-app.azurewebsites.net
+      url: https://supplement-bridge.azurewebsites.net
     steps:
       - uses: actions/checkout@v4
 
@@ -179,7 +179,7 @@ jobs:
       - name: Deploy backend to App Service
         uses: azure/webapps-deploy@v3
         with:
-          app-name: healthsupp-prod-app
+          app-name: supplement-bridge
           package: backend-app/
 
       - name: Deploy frontend to Static Web Apps
@@ -194,7 +194,7 @@ jobs:
       - name: Smoke test
         run: |
           sleep 20
-          curl -f https://healthsupp-prod-app.azurewebsites.net/api/health || exit 1
+          curl -f https://supplement-bridge.azurewebsites.net/api/health || exit 1
           echo "Production smoke test passed"
 
       - name: Create release notes
