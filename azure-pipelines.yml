@@ -26,8 +26,11 @@ stages:
       displayName: Install Node.js
 
     - script: |
+        set CI=false
         npm install
         npm run build
+        echo Build complete. Checking output:
+        dir build
       workingDirectory: frontend
       displayName: Build React Frontend
 
