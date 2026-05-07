@@ -20,9 +20,9 @@ stages:
   - job: Build
     displayName: Build & Package
     steps:
-    - task: NodeTool@0
+    - task: UseNode@1
       inputs:
-        versionSpec: $(nodeVersion)
+        version: $(nodeVersion)
       displayName: Install Node.js
 
     - script: |
@@ -38,7 +38,7 @@ stages:
       displayName: Install & Test Backend
 
     - script: |
-        cp -r frontend/build backend/public
+        xcopy /E /I /Y frontend\build backend\public
       displayName: Copy Frontend into Backend
 
     - task: ArchiveFiles@2
