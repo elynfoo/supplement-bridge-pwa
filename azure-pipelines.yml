@@ -7,8 +7,7 @@ pool:
   vmImage: ubuntu-latest
 
 variables:
-  nodeVersion: '20.x'
-  backendAppName: 'supplement-bridge'
+  nodeVersion: '22.x'
   azureServiceConnection: 'AzureServiceConnection'
 
 stages:
@@ -18,8 +17,8 @@ stages:
   displayName: Build Frontend & Backend
   jobs:
 
-  - job: BuildFrontend
-    displayName: Build React Frontend
+  - job: Build
+    displayName: Build & Package
     steps:
     - task: NodeTool@0
       inputs:
@@ -30,21 +29,7 @@ stages:
         npm ci
         npm run build
       workingDirectory: frontend
-      displayName: Install & Build Frontend
-
-    - task: PublishPipelineArtifact@1
-      inputs:
-        targetPath: frontend/build
-        artifact: frontend-build
-      displayName: Publish Frontend Artifact
-
-  - job: BuildBackend
-    displayName: Build Express Backend
-    steps:
-    - task: NodeTool@0
-      inputs:
-        versionSpec: $(nodeVersion)
-      displayName: Install Node.js
+      displayName: Build React Frontend
 
     - script: |
         npm ci
@@ -52,21 +37,25 @@ stages:
       workingDirectory: backend
       displayName: Install & Test Backend
 
+    - script: |
+        cp -r frontend/build backend/public
+      displayName: Copy Frontend into Backend
+
     - task: ArchiveFiles@2
       inputs:
         rootFolderOrFile: backend
         includeRootFolder: false
         archiveType: zip
-        archiveFile: $(Build.ArtifactStagingDirectory)/backend.zip
+        archiveFile: $(Build.ArtifactStagingDirectory)/app.zip
         replaceExistingArchive: true
         excludePaths: backend/node_modules
-      displayName: Zip Backend
+      displayName: Zip App
 
     - task: PublishPipelineArtifact@1
       inputs:
-        targetPath: $(Build.ArtifactStagingDirectory)/backend.zip
-        artifact: backend-app
-      displayName: Publish Backend Artifact
+        targetPath: $(Build.ArtifactStagingDirectory)/app.zip
+        artifact: app
+      displayName: Publish Artifact
 
 # ── Stage 2: Deploy to Dev ────────────────────────────────────────────────────
 - stage: DeployDev
@@ -75,8 +64,8 @@ stages:
   condition: succeeded()
   jobs:
 
-  - deployment: DeployBackendDev
-    displayName: Deploy Backend → Dev
+  - deployment: DeployDev
+    displayName: Deploy → Dev
     environment: dev
     strategy:
       runOnce:
@@ -87,23 +76,9 @@ stages:
               azureSubscription: $(azureServiceConnection)
               appType: webAppLinux
               appName: supplement-bridge-dev
-              package: $(Pipeline.Workspace)/backend-app/backend.zip
-              runtimeStack: 'NODE|20-lts'
-            displayName: Deploy Backend to App Service (Dev)
-
-  - deployment: DeployFrontendDev
-    displayName: Deploy Frontend → Dev
-    environment: dev
-    strategy:
-      runOnce:
-        deploy:
-          steps:
-          - task: AzureStaticWebApp@0
-            inputs:
-              azure_static_web_apps_api_token: $(AZURE_STATIC_WEB_APPS_API_TOKEN_DEV)
-              app_location: $(Pipeline.Workspace)/frontend-build
-              skip_app_build: true
-            displayName: Deploy Frontend to Static Web App (Dev)
+              package: $(Pipeline.Workspace)/app/app.zip
+              runtimeStack: 'NODE|22-lts'
+            displayName: Deploy to App Service (Dev)
 
 # ── Stage 3: Deploy to Production ────────────────────────────────────────────
 - stage: DeployProd
@@ -112,8 +87,8 @@ stages:
   condition: succeeded()
   jobs:
 
-  - deployment: DeployBackendProd
-    displayName: Deploy Backend → Prod
+  - deployment: DeployProd
+    displayName: Deploy → Prod
     environment: prod
     strategy:
       runOnce:
@@ -124,20 +99,6 @@ stages:
               azureSubscription: $(azureServiceConnection)
               appType: webAppLinux
               appName: supplement-bridge
-              package: $(Pipeline.Workspace)/backend-app/backend.zip
-              runtimeStack: 'NODE|20-lts'
-            displayName: Deploy Backend to App Service (Prod)
-
-  - deployment: DeployFrontendProd
-    displayName: Deploy Frontend → Prod
-    environment: prod
-    strategy:
-      runOnce:
-        deploy:
-          steps:
-          - task: AzureStaticWebApp@0
-            inputs:
-              azure_static_web_apps_api_token: $(AZURE_STATIC_WEB_APPS_API_TOKEN_PROD)
-              app_location: $(Pipeline.Workspace)/frontend-build
-              skip_app_build: true
-            displayName: Deploy Frontend to Static Web App (Prod)
+              package: $(Pipeline.Workspace)/app/app.zip
+              runtimeStack: 'NODE|22-lts'
+            displayName: Deploy to App Service (Prod)
