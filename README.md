@@ -197,8 +197,9 @@ Supported environments: `dev`, `staging`, `uat`, `prod`
 | **HTTP Logging** | Logs all HTTP requests |
 | **64-bit worker** | Better memory and performance |
 | **No client affinity** | Better load distribution across instances |
-| **Azure Static Web Apps (Free tier)** | Global CDN for frontend via Bicep |
 | **Application Insights (Free 5GB/month)** | Performance and failure monitoring |
+| **Log Analytics (Free 5GB/month)** | Centralized logs and query |
+| **Metric Alerts (4 rules)** | CPU, HTTP 5xx, response time, exceptions |
 
 ### Paid Solutions (Planned for Production)
 
