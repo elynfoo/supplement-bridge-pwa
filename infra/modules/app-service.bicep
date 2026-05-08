@@ -20,7 +20,7 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2023-01-01' = {
     capacity: 1
   }
   properties: {
-    reserved: true  // Linux
+    reserved: false  // Windows
   }
 }
 
@@ -46,7 +46,7 @@ resource appService 'Microsoft.Web/sites@2023-01-01' = {
       requestTracingEnabled: true
       detailedErrorLoggingEnabled: true
       httpLoggingEnabled: true
-      use32BitWorkerProcess: false
+      use32BitWorkerProcess: true
       appSettings: [
         {
           name: 'APPINSIGHTS_INSTRUMENTATIONKEY'
