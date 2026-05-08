@@ -4,12 +4,11 @@ param tags object
 param alertEmail string
 param appServicePlanId string
 param appServiceId string
-param sqlServerId string
 param logAnalyticsWorkspaceId string
 
 var actionGroupName = '${resourcePrefix}-ag'
 
-// ─── Action Group ────────────────────────────────────────────────────────────
+// ─── Action Group (free) ─────────────────────────────────────────────────────
 resource actionGroup 'Microsoft.Insights/actionGroups@2023-01-01' = {
   name: actionGroupName
   location: 'global'
@@ -27,7 +26,7 @@ resource actionGroup 'Microsoft.Insights/actionGroups@2023-01-01' = {
   }
 }
 
-// ─── Alert: High CPU on App Service Plan ─────────────────────────────────────
+// ─── Alert: High CPU (free — counts toward 10 free metric alerts) ─────────────
 resource alertHighCpu 'Microsoft.Insights/metricAlerts@2018-03-01' = {
   name: '${resourcePrefix}-alert-high-cpu'
   location: 'global'
@@ -52,15 +51,11 @@ resource alertHighCpu 'Microsoft.Insights/metricAlerts@2018-03-01' = {
         }
       ]
     }
-    actions: [
-      {
-        actionGroupId: actionGroup.id
-      }
-    ]
+    actions: [{ actionGroupId: actionGroup.id }]
   }
 }
 
-// ─── Alert: HTTP 5xx errors ──────────────────────────────────────────────────
+// ─── Alert: HTTP 5xx errors (free) ───────────────────────────────────────────
 resource alertHttp5xx 'Microsoft.Insights/metricAlerts@2018-03-01' = {
   name: '${resourcePrefix}-alert-http5xx'
   location: 'global'
@@ -85,15 +80,11 @@ resource alertHttp5xx 'Microsoft.Insights/metricAlerts@2018-03-01' = {
         }
       ]
     }
-    actions: [
-      {
-        actionGroupId: actionGroup.id
-      }
-    ]
+    actions: [{ actionGroupId: actionGroup.id }]
   }
 }
 
-// ─── Alert: App Service response time ────────────────────────────────────────
+// ─── Alert: Response time (free) ─────────────────────────────────────────────
 resource alertResponseTime 'Microsoft.Insights/metricAlerts@2018-03-01' = {
   name: '${resourcePrefix}-alert-response-time'
   location: 'global'
@@ -118,48 +109,11 @@ resource alertResponseTime 'Microsoft.Insights/metricAlerts@2018-03-01' = {
         }
       ]
     }
-    actions: [
-      {
-        actionGroupId: actionGroup.id
-      }
-    ]
+    actions: [{ actionGroupId: actionGroup.id }]
   }
 }
 
-// ─── Alert: SQL DTU usage high ───────────────────────────────────────────────
-resource alertSqlDtu 'Microsoft.Insights/metricAlerts@2018-03-01' = {
-  name: '${resourcePrefix}-alert-sql-dtu'
-  location: 'global'
-  tags: tags
-  properties: {
-    description: 'SQL Database DTU consumption > 80%'
-    severity: 2
-    enabled: true
-    scopes: [sqlServerId]
-    evaluationFrequency: 'PT5M'
-    windowSize: 'PT15M'
-    criteria: {
-      'odata.type': 'Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria'
-      allOf: [
-        {
-          name: 'HighDtu'
-          criterionType: 'StaticThresholdCriterion'
-          metricName: 'dtu_consumption_percent'
-          operator: 'GreaterThan'
-          threshold: 80
-          timeAggregation: 'Average'
-        }
-      ]
-    }
-    actions: [
-      {
-        actionGroupId: actionGroup.id
-      }
-    ]
-  }
-}
-
-// ─── Log Analytics alert: App exceptions ─────────────────────────────────────
+// ─── Alert: App exceptions via Log Analytics (free) ──────────────────────────
 resource alertAppExceptions 'Microsoft.Insights/scheduledQueryRules@2023-03-15-preview' = {
   name: '${resourcePrefix}-alert-exceptions'
   location: location
