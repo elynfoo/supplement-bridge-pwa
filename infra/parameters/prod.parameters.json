@@ -17,7 +17,7 @@
     "sqlAdminPassword": {
       "reference": {
         "keyVault": {
-          "id": "/subscriptions/747b36e5-db47-4f4e-ab38-6be132019830/resourceGroups/supplement-bridge-rg/providers/Microsoft.KeyVault/vaults/supplement-bridge-prod-kv"
+          "id": "/subscriptions/747b36e5-db47-4f4e-ab38-6be132019830/resourceGroups/supplement-bridge_group/providers/Microsoft.KeyVault/vaults/supplement-bridge-prod-kv"
         },
         "secretName": "SqlAdminPassword"
       }

@@ -6,7 +6,7 @@ A cloud-based e-commerce platform connecting customers with trusted supplement p
 
 | Environment | URL |
 |---|---|
-| Production | https://supplement-bridge-a8anhmbfcydufcat.southeastasia-01.azurewebsites.net |
+| Production | https://supplement-bridge-a8anhmbfcydufcat.southeastasia-01.azurewebsites.net (supplement-bridge_group) |
 | Dev | https://supplement-bridge-dev.azurewebsites.net |
 
 ## Architecture
