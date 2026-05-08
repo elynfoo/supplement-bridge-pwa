@@ -1,14 +1,14 @@
 targetScope = 'resourceGroup'
 
 @description('Environment name: dev, staging, or prod')
-@allowed(['dev', 'staging', 'prod'])
+@allowed(['dev', 'staging', 'uat', 'prod'])
 param environmentName string
 
 @description('Azure region for all resources')
 param location string = resourceGroup().location
 
 @description('Project/app name prefix')
-param projectName string = 'healthsupp'
+param projectName string = 'supplement-bridge'
 
 @description('SQL administrator login')
 param sqlAdminLogin string
@@ -18,7 +18,7 @@ param sqlAdminLogin string
 param sqlAdminPassword string
 
 @description('Alert notification email')
-param alertEmail string
+param alertEmail string = 'elynf@genstudents.org'
 
 var resourcePrefix = '${projectName}-${environmentName}'
 var tags = {

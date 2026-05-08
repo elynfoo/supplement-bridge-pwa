@@ -21,3 +21,5 @@ out/
 coverage/
 .netlify/
 .vercel/
+.claude/
+frontend/.env

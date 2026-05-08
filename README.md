@@ -6,8 +6,8 @@ A cloud-based e-commerce platform connecting customers with trusted supplement p
 
 | Environment | URL |
 |---|---|
-| Production | https://supplement-bridge-a8anhmbfcydufcat.southeastasia-01.azurewebsites.net (supplement-bridge_group) |
-| Dev | https://supplement-bridge-dev.azurewebsites.net |
+| Production | https://supplement-bridge-a8anhmbfcydufcat.southeastasia-01.azurewebsites.net|  https://supplement-bridge-a8anhmbfcydufcat.southeastasia-01.azurewebsites.net/admin
+| Dev | https://supplement-bridge-dev.azurewebsites.net | https://supplement-bridge-dev.azurewebsites.net/admin
 
 ## Architecture
 
@@ -123,7 +123,12 @@ az deployment group create \
                sqlAdminPassword=YourPassword123!
 ```
 
-Supported environments: `dev`, `staging`, `uat`, `prod`
+Supported environments: `dev`, `staging`, `uat`, `prod` 
+
+dev — supplement-bridge-dev App Service ✓
+prod — supplement-bridge App Service ✓
+staging — not created yet
+uat — not created yet
 
 ## Tech Stack
 
