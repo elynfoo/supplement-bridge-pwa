@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Browse from './components/Browse';
 import Quiz from './components/Quiz';
@@ -18,7 +18,7 @@ if (window.location.pathname.startsWith('/admin')) {
   import('react-dom/client').then(({ createRoot }) => {
     createRoot(document.getElementById('root')).render(
       <React.StrictMode>
-        <React.Suspense fallback={<div style={{ padding: '2rem' }}>Loadingâ€¦</div>}>
+        <React.Suspense fallback={<div style={{ padding: '2rem' }}>Loading...</div>}>
           <AdminApp />
         </React.Suspense>
       </React.StrictMode>
@@ -142,7 +142,7 @@ export default function App() {
   const goHome = () => { setScreen('browse'); setSelectedProduct(null); };
 
   if (loading && screen === 'browse' && products.length === 0) {
-    return <div className="container"><h2>Loading productsâ€¦</h2></div>;
+    return <div className="container"><h2>Loading products...</h2></div>;
   }
 
   return (
@@ -213,7 +213,7 @@ function Header({ screen, cartCount, user, goHome, onCartClick, onSignIn, onLogo
 
   return (
     <header className="header">
-      <button className="header-home" onClick={goHome}>â† HealthSupp</button>
+      <button className="header-home" onClick={goHome}>HealthSupp</button>
       <h1>{screenNames[screen] || 'HealthSupp'}</h1>
       <div className="header-right">
         {user ? (
