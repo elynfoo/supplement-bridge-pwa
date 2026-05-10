@@ -60,7 +60,7 @@ stages:
         archiveType: zip
         archiveFile: $(Build.ArtifactStagingDirectory)/app.zip
         replaceExistingArchive: true
-        excludePaths: backend/node_modules
+        excludePaths: node_modules
       displayName: Zip App
 
     - task: PublishPipelineArtifact@1
