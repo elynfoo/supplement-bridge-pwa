@@ -41,7 +41,7 @@ export default function Browse({ products, onSelectProduct, onStartQuiz }) {
       <div className="browse-controls">
         <input
           type="text"
-          placeholder="ðŸ” Search supplements, ingredients..."
+          placeholder="Search supplements, ingredients..."
           value={searchQuery}
           onChange={handleSearch}
           className="search-input"

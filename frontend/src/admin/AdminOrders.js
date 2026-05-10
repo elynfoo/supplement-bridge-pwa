@@ -71,7 +71,7 @@ export default function AdminOrders({ token, onStatsChange }) {
     <div className="admin-section">
       <div className="admin-section-header">
         <h2>Orders</h2>
-        <span className="admin-live-badge">â— Live</span>
+        <span className="admin-live-badge">Live</span>
       </div>
 
       {notification && (

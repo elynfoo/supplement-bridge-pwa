@@ -84,7 +84,7 @@ export default function Quiz({ onSubmit, loading }) {
 
       <div className="quiz-buttons">
         <button className="btn-secondary" onClick={handleBack} disabled={currentQuestion === 0}>
-          â† Back
+          Back
         </button>
         <button
           className="btn-primary"

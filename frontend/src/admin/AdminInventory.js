@@ -84,7 +84,7 @@ export default function AdminInventory({ token, onStatsChange }) {
     <div className="admin-section">
       <div className="admin-section-header">
         <h2>Inventory</h2>
-        <span className="admin-live-badge">â— Live</span>
+        <span className="admin-live-badge">Live</span>
       </div>
 
       <div className="admin-table-wrapper">
