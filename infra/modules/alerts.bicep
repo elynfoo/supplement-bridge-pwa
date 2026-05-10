@@ -128,7 +128,7 @@ resource alertAppExceptions 'Microsoft.Insights/scheduledQueryRules@2023-03-15-p
     criteria: {
       allOf: [
         {
-          query: 'AppExceptions | where severityLevel >= 3 | summarize count() by bin(TimeGenerated, 5m)'
+          query: 'AppExceptions | where SeverityLevel >= 3 | summarize count() by bin(TimeGenerated, 5m)'
           timeAggregation: 'Count'
           operator: 'GreaterThan'
           threshold: 5
