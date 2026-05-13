@@ -53,9 +53,10 @@ Provide a modern, accessible digital storefront for healthcare supplement retail
 | Obstacle | Impact | Mitigation |
 | --- | --- | --- |
 | Azure for Students subscription restrictions | Azure Static Web Apps blocked; auto-scaling unavailable on Free F1 | Use App Service to serve both frontend and backend from a single host |
-| Free tier cold starts | App sleeps after 20 min inactivity; first request takes 30–60 s | Upgrade to B1 Basic tier (Always On) when moving to full production |
-| In-memory data persistence | All product and order data resets on app restart | Migrate to Azure SQL Database when budget allows |
-| No Key Vault in current deployment | Secrets stored as App Service environment variables | Bicep template for Key Vault is ready; deploy when subscription tier permits |
+| Free tier cold starts | App sleeps after 20 min inactivity; first request takes 30–60 s | Upgrade to B1 Basic tier (Always On) in Phase 4 |
+| In-memory data persistence | All product and order data resets on app restart | Migrate to Azure SQL Database free offer (serverless, LRS backups) in Phase 4 |
+| No Key Vault in current deployment | Secrets stored as App Service environment variables | Bicep template for Key Vault is ready; deploy alongside SQL migration |
+| No WAF or CDN in current deployment | No edge caching or web application firewall | Add Azure CDN in Phase 4 (free at low volume); Application Gateway WAF in Phase 5 |
 | PWA icon assets missing | Service worker failed to install; PWA was not installable | Resolved — replaced missing PNGs with SVG icon; SW cache bumped to v2 |
 | CI/CD agent dependency | Pipeline relies on a self-hosted Windows agent on the Default pool | Document agent setup; consider Microsoft-hosted agents as fallback |
 
@@ -154,13 +155,22 @@ The app is installable as a PWA on supported browsers. iOS requires Safari; the 
 
 **Infrastructure & DevOps**
 
-| Software | Purpose |
-| --- | --- |
-| Azure App Service (Linux) | Application hosting |
-| Azure Pipelines | CI/CD — build, test, deploy |
-| Azure Bicep | Infrastructure as Code |
-| Azure Application Insights | Performance and error monitoring |
-| Azure Log Analytics | Centralised log storage and query |
+| Software | Status | Purpose |
+| --- | --- | --- |
+| Azure App Service (Linux) | Deployed | Application hosting |
+| Azure Pipelines | Deployed | CI/CD — build, test, deploy |
+| Azure Bicep | Deployed | Infrastructure as Code |
+| Azure Application Insights | Bicep only | Performance and error monitoring |
+| Azure Log Analytics | Bicep only | Centralised log storage and query |
+| Azure SQL Database (serverless, LRS) | Phase 4 | Persistent data store — replaces in-memory mock data |
+| Azure Blob Storage | Phase 4 | Product image storage |
+| Azure CDN (Microsoft) | Phase 4 | Static asset edge caching |
+| Azure Key Vault | Phase 4 | Secure secret and connection string management |
+| Azure Application Gateway WAF v2 | Phase 5 | Regional L7 load balancer and web application firewall |
+| Azure Front Door | Phase 5 | Global routing, DDoS protection — multi-region only |
+| Azure Redis Cache | Phase 5 | Session and data caching when DB is a bottleneck |
+| Azure SQL Active Geo-Replication | Phase 5 | Live secondary DB in paired region (General Purpose tier+) |
+| Azure SQL Failover Groups | Phase 5 | Automatic regional failover (enterprise scale only) |
 
 ---
 
@@ -184,15 +194,21 @@ The app is installable as a PWA on supported browsers. iOS requires Safari; the 
 | | PWA manifest, service worker, installability | Complete | Done |
 | | Bicep IaC for multi-environment provisioning | Complete | Done |
 | | UAT environment deployment | In progress | — |
-| **Phase 4 — Production Hardening** | Migrate from mock data to Azure SQL Database | Planned | — |
-| | Azure Key Vault for secrets management | Planned | — |
+| **Phase 4 — Production Hardening** | Azure SQL Database migration (serverless, LRS backups, free offer) | Planned | — |
+| | Azure Blob Storage for product images | Planned | — |
+| | Azure CDN (Microsoft) for static asset caching | Planned | — |
+| | Azure Key Vault for secrets and connection strings | Planned | — |
+| | App Service upgrade to B1 (Always On — no cold starts) | Planned | — |
 | | Payment gateway integration (Stripe + PayNow live) | Planned | — |
-| | Azure Front Door + WAF | Planned | — |
 | | Microsoft Entra ID (enterprise auth) | Planned | — |
-| | Staging environment and deployment slots | Planned | — |
-| **Phase 5 — Scale** | Auto-scaling, Redis cache, CDN | Future | — |
-| | Azure Defender, threat detection | Future | — |
-| | Geo-replication and multi-region failover | Future | — |
+| | Staging slot and zero-downtime deployment swap | Planned | — |
+| **Phase 5 — Scale & Resilience** | Azure Application Gateway WAF v2 (regional WAF) | Future | — |
+| | Azure Front Door (global routing — multi-region only) | Future | — |
+| | Azure Redis Cache (add when DB is a bottleneck) | Future | — |
+| | Auto-scaling (P2v3 tier) | Future | — |
+| | Azure SQL upgrade to geo-redundant backups (GRS) | Future | — |
+| | Azure SQL Active Geo-Replication + Failover Groups | Future | — |
+| | Azure Defender / threat detection | Future | — |
 
 ---
 
@@ -314,32 +330,36 @@ Deploy Prod
 | Azure Pipelines (free tier) | CI/CD | $0 |
 | Application Insights (≤ 5 GB) | Monitoring | $0 |
 | Log Analytics (≤ 5 GB) | Monitoring | $0 |
-| Domain / SSL | Hosting | $0 (Azure subdomain) |
+| Azure domain (existing) | Hosting | $0 |
 | **Phase 1 Total** | | **$0/month** |
 
-### Phase 2 — Production Hardening (Estimated)
+### Phase 4 — Production Hardening (Estimated)
 
-| Item | Type | Monthly Cost |
-| --- | --- | --- |
-| App Service — Prod (B1, Always On) | Infrastructure | ~$13 |
-| Azure SQL Database (Basic) | Data | ~$5 |
-| Azure Key Vault (Standard) | Security | ~$5 |
-| Azure Application Insights (overage) | Monitoring | ~$5 |
-| Stripe payment processing (2.9% + $0.30/txn) | Transaction | Variable |
-| **Phase 2 Total** | | **~$28/month + transaction fees** |
+| Item | Type | Monthly Cost | Notes |
+| --- | --- | --- | --- |
+| App Service — Prod (B1, Always On) | Infrastructure | ~$13 | Eliminates cold starts |
+| Azure SQL Database (serverless, LRS) | Data | $0 | Free offer — 1 per subscription, 32 GB |
+| Azure Blob Storage (product images) | Storage | ~$0 | ~2 MB images at $0.02/GB |
+| Azure CDN (Microsoft) | Delivery | ~$0 | Free first 5 GB/month |
+| Azure Key Vault (Standard) | Security | ~$5 | — |
+| Application Insights (overage) | Monitoring | ~$5 | — |
+| Stripe + PayNow (live) | Transaction | Variable | 2.9% + $0.30/txn |
+| **Phase 4 Total** | | **~$23/month + txn fees** | SQL free offer assumed |
 
-### Phase 3 — Scale (Estimated)
+### Phase 5 — Scale & Resilience (Estimated)
 
-| Item | Type | Monthly Cost |
-| --- | --- | --- |
-| Azure Front Door + WAF (Standard) | Network / Security | ~$35 |
-| Azure Redis Cache (C0) | Performance | ~$16 |
-| App Service — Prod (S1, deployment slots) | Infrastructure | ~$56 |
-| Azure CDN | Delivery | ~$5 |
-| **Phase 3 Total (incremental)** | | **~$112/month** |
+| Item | Type | Monthly Cost | Notes |
+| --- | --- | --- | --- |
+| App Service — Prod (S1, deployment slots) | Infrastructure | ~$56 | Upgrade from B1 for staging slots |
+| Azure Application Gateway WAF v2 | Network / Security | ~$40 | Regional WAF — replaces direct App Service exposure |
+| Azure Redis Cache (C0) | Performance | ~$16 | Add when DB is a bottleneck |
+| Azure SQL upgrade to General Purpose | Data | ~$150+ | Required for geo-replication and failover groups |
+| Azure Front Door (Standard) | Network | ~$35 | Only when multi-region routing is needed |
+| **Phase 5 Total (incremental)** | | **~$297+/month** | Geo-replication adds $150+ |
 
 **Notes**
-- All costs are estimates in USD based on Southeast Asia (Singapore) region pricing as of 2025
-- Azure for Students credits may offset Phase 1 and Phase 2 costs
-- Transaction fees scale with sales volume and are not capped
-- Geo-replication and multi-region failover (Phase 5) would add $900+/month and are out of scope until commercial scale is reached
+- All costs are estimates in USD based on Southeast Asia (Singapore) region pricing as of 2026
+- Azure for Students credits cover Phase 1 entirely and offset Phase 4 costs
+- Azure SQL free offer applies to one database per subscription — verify availability before provisioning
+- SQL geo-replication (GRS backups → Active Geo-Replication → Failover Groups) should be adopted incrementally as SLA requirements grow
+- Front Door is deferred to Phase 5 — Application Gateway WAF handles regional security at lower cost

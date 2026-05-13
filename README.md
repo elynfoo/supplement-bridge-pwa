@@ -20,28 +20,45 @@ Users → Azure App Service (Express + React)
 ```
 
 | Component | Status | Notes |
-|---|---|---|
+| --- | --- | --- |
 | Azure App Service | Deployed | Hosts both frontend and backend |
 | Azure Pipelines CI/CD | Deployed | Auto-deploys on push to main |
 | JWT Authentication | Deployed | Login, admin roles |
 | Bicep IaC | Ready | Defines infra for new environments |
 | Azure Key Vault | Bicep only | Not yet deployed |
-| Azure SQL Database | Bicep only | Using in-memory mock data |
-| Azure Storage Account | Bicep only | Not yet deployed |
+| Azure SQL Database | Phase 4 | Free offer (serverless, LRS backups, 32 GB) — replaces in-memory mock data |
+| Azure Blob Storage | Phase 4 | Product image storage |
+| Azure CDN (Microsoft) | Phase 4 | Static asset edge caching (~$0 at low volume) |
 | Azure Monitor / App Insights | Bicep only | Not yet deployed |
 
-### Planned (from Architecture Diagram)
+### Phase 4 — Production Hardening (Planned)
 
-| Component | Purpose |
-|---|---|
-| Azure Front Door + WAF | Global load balancing, DDoS protection |
-| Azure Static Web Apps | Separate frontend hosting |
-| Azure API Management | API gateway, rate limiting |
-| Azure Functions | Serverless background tasks |
-| Azure Redis Cache | Session and data caching |
-| Microsoft Entra ID | Enterprise authentication |
-| Azure CDN | Static asset delivery |
-| Azure Defender | Threat detection |
+| Component | Purpose | Cost |
+| --- | --- | --- |
+| Azure SQL Database (serverless, LRS) | Persistent data store — products, users, orders | Free offer ($0) |
+| Azure Key Vault | Secure storage for DB connection strings and secrets | ~$5/month |
+| Azure Blob Storage | Product image hosting | ~$0 at current image volume |
+| Azure CDN (Microsoft) | Edge caching for static assets and images | ~$0 at low traffic |
+| App Service B1 (Always On) | Eliminate cold starts | ~$13/month |
+| Stripe + PayNow (live) | Real payment processing | 2.9% + $0.30/txn |
+| Microsoft Entra ID | Enterprise authentication | Varies |
+| Staging slot (deployment swap) | Zero-downtime releases | Requires S1 tier ~$56/month |
+
+### Phase 5 — Scale & Resilience (Future)
+
+| Component | Purpose | Why deferred |
+| --- | --- | --- |
+| Azure Application Gateway v2 | Regional L7 load balancer | ~$18/month — not needed until multi-instance |
+| Azure Application Gateway WAF v2 | Web application firewall | ~$40/month — revisit at production scale |
+| Azure Front Door | Global routing, DDoS, WAF | ~$35/month — only justified with multi-region traffic |
+| Azure Redis Cache | Session and data caching | ~$16/month — add when DB becomes a bottleneck |
+| Azure SQL Active Geo-Replication | Live secondary in paired region | Requires General Purpose tier ~$150+/month |
+| Azure SQL Failover Groups | Automatic regional failover | Requires General Purpose tier — enterprise scale only |
+| SQL geo-redundant backups (GRS) | Backups replicated to paired region | Upgrade from LRS when SLA demands it |
+| Azure Functions | Serverless background tasks (email, reports) | Add when async processing is needed |
+| Microsoft Entra ID (full) | SSO, enterprise auth | Add when B2B clients require it |
+| Azure Defender | Threat detection and security alerts | Add when handling PII at scale |
+| Auto-scaling | Scale out on high CPU | Requires P2v3 ~$195/month |
 
 ## CI/CD Pipeline
 
